@@ -14,6 +14,7 @@ group :production do
   gem 'pg'
 end
 
+
 # Gems used only for assets and not required
 # in production environments by default.
 group :assets do
@@ -31,5 +32,10 @@ gem 'jquery-rails'
 # Deploy with Capistrano
 # gem 'capistrano'
 
-# To use debugger
+# use Haml for templates
 gem 'haml'
+
+# use Ruby debugger
+group :development, :test do
+  gem 'ruby-debug19'
+end
