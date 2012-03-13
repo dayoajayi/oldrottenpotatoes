@@ -1,4 +1,11 @@
 class MoviesController < ApplicationController
+  
+  def initialize
+    @all_ratings = Movie.all_ratings
+    @ratings = @all_ratings
+    @sort_by = :id
+    super
+  end
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -7,11 +14,58 @@ class MoviesController < ApplicationController
   end
 
   def index
-    @movies = Movie.all
+    redirect = false
+    
+    if params["sort_by"]
+      @sort_by = params["sort_by"]
+    elsif session[:sort_by]
+      @sort_by = session[:sort_by]
+      redirect = true
+    else
+      @sort_by = :id
+      redirect = true
+    end
+    
+    if params["ratings"]
+      @ratings= params["ratings"]
+    elsif session[:ratings]
+      @ratings = session[:ratings]
+      redirect = true
+    else
+      @ratings = {}
+      @all_ratings.each do |rating|
+        @ratings[rating] = "yes"
+      end
+      redirect = true
+    end
+    
+    if redirect
+      redirect_to movies_path(:sort_by=>@sort_by, :ratings=>@ratings)
+    end
+    
+    all_movies = Movie.order(@sort_by)
+    
+    @movies = []
+    
+    all_movies.each do |movie|
+      if @ratings.keys.include?(movie["rating"])
+        @movies << movie
+      end
+    end
+    
+    flash[:sort_by] = @sort_by
+    flash[:ratings] = @ratings
+    session[:sort_by] = @sort_by
+    session[:ratings] = @ratings
+    
+    #@movies = Movie.all
+    #@movies = Movie.find(:all, :order => 'title') if params[:sort] == 'title'
+    #@movies = Movie.find(:all, :order => 'release_date') if params[:sort] == 'release'
   end
 
   def new
     # default: render 'new' template
+    @all_ratings = Movie.find(:all,:select=>"rating",:group =>"rating").map(&:rating)
   end
 
   def create
